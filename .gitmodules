@@ -1,3 +1,0 @@
-[submodule "choreonoid_sdfloader_plugin"]
-	path = choreonoid_sdfloader_plugin
-	url = https://github.com/fkanehiro/choreonoid-sdfloader-plugin.git
