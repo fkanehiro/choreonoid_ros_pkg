@@ -82,6 +82,7 @@ catkin_package(
 )
 
 option(ENABLE_PYTHON "" ON)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -finline-functions")
 option(ENABLE_GCC_FVISIBILITY_HIDDEN "Use the -fvisibility=hidden option when the sources are compiled" ON)
 option(ENABLE_INSTALL_RPATH "Enable RPATH setting for installed binary files" ON)
