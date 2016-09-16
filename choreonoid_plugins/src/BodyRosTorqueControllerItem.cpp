@@ -210,9 +210,13 @@ bool BodyRosTorqueControllerItem::hook_of_start()
 
   qref_old_.resize(body()->numJoints());
   q_old_.resize(body()->numJoints());
+  dq_llimit_ts_.resize(body()->numJoints());
+  dq_ulimit_ts_.resize(body()->numJoints());
 
   for (size_t i = 0; i < body()->numJoints(); i++) {
     qref_old_[i] = body()->joint(i)->q();
+    dq_llimit_ts_[i] = body()->joint(i)->dq_lower() * timeStep_;
+    dq_ulimit_ts_[i] = body()->joint(i)->dq_upper() * timeStep_;
   }
 
   q_old_ = qref_old_;
@@ -252,12 +256,12 @@ void BodyRosTorqueControllerItem::pd_control(Link* joint, double q_ref)
   if (isnan(dq_ref)) {
     ROS_ERROR("Calculate dq_ref, result is NaN (%s)", joint->name().c_str());
     goto done;
-  } else if (dq_ref < joint->dq_lower()) {
-    ROS_DEBUG("Calculate dq_ref, result is over lower limt. (adjust %f -> %f)", dq_ref, joint->dq_lower());
-    dq_ref = joint->dq_lower();
-  } else if (dq_ref > joint->dq_upper()) {
-    ROS_DEBUG("Calculate dq_ref, result is over upper limt. (adjust %f -> %f)", dq_ref, joint->dq_upper());
-    dq_ref = joint->dq_upper();
+  } else if (dq_ref < dq_llimit_ts_[i]) {
+    ROS_DEBUG("Calculate dq_ref, result is over lower limt. (adjust %f -> %f)", dq_ref, dq_llimit_ts_[i]);
+    dq_ref = dq_llimit_ts_[i];
+  } else if (dq_ref > dq_ulimit_ts_[i]) {
+    ROS_DEBUG("Calculate dq_ref, result is over upper limt. (adjust %f -> %f)", dq_ref, dq_ulimit_ts_[i]);
+    dq_ref = dq_ulimit_ts_[i];
   }
 
   dq = (q - q_old_[i]) / timeStep_;
@@ -265,12 +269,10 @@ void BodyRosTorqueControllerItem::pd_control(Link* joint, double q_ref)
   if (isnan(dq)) {
     ROS_ERROR("Calculate dq, result is NaN (%s)", joint->name().c_str());
     goto done;
-  } else if (dq < joint->dq_lower()) {
-    ROS_DEBUG("Calculate dq, result is over lower limt. (adjust %f -> %f)", dq, joint->dq_lower());
-    dq = joint->dq_lower();
-  } else if (dq > joint->dq_upper()) {
-    ROS_DEBUG("Calculate dq, result is over upper limt. (adjust %f -> %f)", dq, joint->dq_upper());
-    dq = joint->dq_upper();
+  } else if (dq_ref < dq_llimit_ts_[i]) {
+    ROS_DEBUG("Calculate dq, result is over lower limt. (dq: %f limit: %f)", dq, dq_llimit_ts_[i]);
+  } else if (dq_ref > dq_ulimit_ts_[i]) {
+    ROS_DEBUG("Calculate dq, result is over upper limt. (dq: %f limit: %f)", dq, dq_ulimit_ts_[i]);
   }
 
   u = (q_ref - q) * pgain[i] + (dq_ref - dq) * dgain[i];

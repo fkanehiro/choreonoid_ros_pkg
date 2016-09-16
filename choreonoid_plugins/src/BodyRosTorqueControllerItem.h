@@ -48,6 +48,11 @@ private:
     std::vector<double> qref_old_;
     std::vector<double> q_old_;
 
+    /// Lower limit of joint anglur velocity. (per timeStep_)
+    std::vector<double> dq_llimit_ts_;
+    /// Upper limit of joint anglur velocity. (per timeStep_)
+    std::vector<double> dq_ulimit_ts_;
+
     /**
      */
     bool set_pdc_parameters(Listing* src, std::vector<double>& dst);
